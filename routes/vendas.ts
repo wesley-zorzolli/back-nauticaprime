@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client"
 import { Router } from "express"
 import { z } from 'zod'
+import { sendMail } from '../services/mailer'
 
 const prisma = new PrismaClient()
 const router = Router()
@@ -43,8 +44,37 @@ router.post("/", async (req, res) => {
 
   try {
     const venda = await prisma.venda.create({
-      data: { clienteId, embarcacaoId, descricao, valor, data_venda }
+      data: { clienteId, embarcacaoId, descricao, valor, data_venda },
+      include: {
+        cliente: true,
+        embarcacao: { include: { marca: true } }
+      }
     })
+
+    // Envia e-mail de confirmação para o cliente (se Mailtrap estiver configurado)
+    try {
+      if (process.env.MAILTRAP_USER && process.env.MAILTRAP_PASS) {
+        await sendMail({
+          to: venda.cliente.email,
+          subject: 'Confirmação da sua venda/proposta - Náutica Prime',
+          html: `
+            <h2>Olá, ${venda.cliente.nome}</h2>
+            <p>Recebemos sua venda/proposta:</p>
+            <ul>
+              <li>Embarcação: ${venda.embarcacao.modelo} (${venda.embarcacao.ano}) - ${venda.embarcacao.marca.nome}</li>
+              <li>Descrição: ${venda.descricao}</li>
+              <li>Valor: R$ ${venda.valor.toFixed(2)}</li>
+              <li>Data: ${new Date(venda.data_venda).toLocaleDateString('pt-BR')}</li>
+            </ul>
+            <p>Em breve entraremos em contato.</p>
+          `
+        })
+      }
+    } catch (e) {
+      // Não falhe a request por causa do e-mail
+      console.error('Falha ao enviar e-mail (Mailtrap):', e)
+    }
+
     res.status(201).json(venda)
   } catch (error) {
     res.status(400).json(error)
