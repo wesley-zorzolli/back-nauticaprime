@@ -1,0 +1,32 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Prisma migrate dev - add preco",
+			"type": "shell",
+			"command": "npx prisma migrate dev --name add_preco_to_embarcacao",
+			"isBackground": false,
+			"problemMatcher": [
+				"$prisma"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Prisma generate",
+			"type": "shell",
+			"command": "npx prisma generate",
+			"isBackground": false,
+			"problemMatcher": [
+				"$prisma"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Prisma migrate dev - add preco",
+			"type": "shell",
+			"command": "npx prisma migrate dev --name add_preco_to_embarcacao",
+			"isBackground": false,
+			"group": "build"
+		}
+	]
+}

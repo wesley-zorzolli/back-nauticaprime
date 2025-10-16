@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken"
 import { PrismaClient } from "@prisma/client"
 import { Router } from "express"
 import bcrypt from 'bcrypt'
+import { getErrorMessage } from "../utils/errors"
 
 const prisma = new PrismaClient()
 const router = Router()
@@ -61,7 +62,7 @@ router.post("/", async (req, res) => {
       res.status(400).json({ erro: mensaPadrao })
     }
   } catch (error) {
-    res.status(400).json(error)
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro no login de administrador') })
   }
 })
 

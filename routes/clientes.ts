@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client"
 import { Router } from "express"
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
+import { getErrorMessage, zodIssues } from "../utils/errors"
 
 const prisma = new PrismaClient()
 const router = Router()
@@ -20,7 +21,7 @@ router.get("/", async (req, res) => {
     const clientes = await prisma.cliente.findMany()
     res.status(200).json(clientes)
   } catch (error) {
-    res.status(400).json(error)
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro ao listar clientes') })
   }
 })
 
@@ -81,7 +82,7 @@ router.post("/", async (req, res) => {
 
   const valida = clienteSchema.safeParse(req.body)
   if (!valida.success) {
-    res.status(400).json({ erro: valida.error })
+    res.status(400).json({ erro: zodIssues(valida.error) })
     return
   }
 
@@ -106,7 +107,7 @@ router.post("/", async (req, res) => {
     })
     res.status(201).json(cliente)
   } catch (error) {
-    res.status(400).json(error)
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro ao cadastrar cliente') })
   }
 })
 
@@ -118,7 +119,7 @@ router.get("/:id", async (req, res) => {
     })
     res.status(200).json(cliente)
   } catch (error) {
-    res.status(400).json(error)
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro ao buscar cliente') })
   }
 })
 

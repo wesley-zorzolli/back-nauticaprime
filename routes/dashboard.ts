@@ -6,10 +6,14 @@ const router = Router()
 
 router.get("/gerais", async (req, res) => {
   try {
-    const clientes = await prisma.cliente.count()
-    const embarcacoes = await prisma.embarcacao.count()
-    const vendas = await prisma.venda.count()
-    res.status(200).json({ clientes, embarcacoes, vendas })
+    const [clientes, embarcacoes, propostas, vendas] = await Promise.all([
+      prisma.cliente.count(),
+      prisma.embarcacao.count(),
+      prisma.proposta.count(),
+      prisma.venda.count(),
+    ])
+    // Mantém 'vendas' por compatibilidade e adiciona 'propostas' conforme front-end espera
+    res.status(200).json({ clientes, embarcacoes, propostas, vendas })
   } catch (error) {
     res.status(400).json(error)
   }

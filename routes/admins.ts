@@ -3,6 +3,7 @@ import { Router } from "express"
 import bcrypt from 'bcrypt'
 import { z } from 'zod'
 import { verificaToken } from "../middewares/verificaToken"
+import { getErrorMessage, zodIssues } from "../utils/errors"
 
 const prisma = new PrismaClient()
 const router = Router()
@@ -17,12 +18,40 @@ const adminSchema = z.object({
     .max(5, { message: "Nível, no máximo, 5" })
 })
 
-router.get("/", async (req, res) => {
+// Listar todos os administradores (protegido por token)
+router.get("/", verificaToken, async (req, res) => {
   try {
-    const admins = await prisma.admin.findMany()
-    res.status(200).json(admins)
+    const admins = await prisma.admin.findMany({
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        nivel: true,
+        createdAt: true,
+        updatedAt: true
+        // senha: false - não incluir senha na resposta
+      }
+    })
+    
+    res.status(200).json({
+      total: admins.length,
+      admins: admins
+    })
   } catch (error) {
-    res.status(400).json(error)
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro ao listar administradores') })
+  }
+})
+
+// Verificar se existe pelo menos um admin cadastrado (sem necessidade de token)
+router.get("/existe", async (req, res) => {
+  try {
+    const count = await prisma.admin.count()
+    res.status(200).json({
+      existeAdmin: count > 0,
+      totalAdmins: count
+    })
+  } catch (error) {
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro ao verificar administradores') })
   }
 })
 
@@ -79,11 +108,47 @@ function validaSenha(senha: string) {
   return mensa
 }
 
+// Cadastro do primeiro admin (sem token)
+router.post("/primeiro-acesso", async (req, res) => {
+  const valida = adminSchema.safeParse(req.body)
+  if (!valida.success) {
+    res.status(400).json({ erro: zodIssues(valida.error) })
+    return
+  }
+
+  // Só permite se não existe nenhum admin
+  const count = await prisma.admin.count()
+  if (count > 0) {
+    res.status(403).json({ erro: "Já existe administrador cadastrado!" })
+    return
+  }
+
+  const erros = validaSenha(valida.data.senha)
+  if (erros.length > 0) {
+    res.status(400).json({ erro: erros.join("; ") })
+    return
+  }
+
+  const salt = bcrypt.genSaltSync(12)
+  const hash = bcrypt.hashSync(valida.data.senha, salt)
+  const { nome, email, nivel } = valida.data
+
+  try {
+    const admin = await prisma.admin.create({
+      data: { nome, email, senha: hash, nivel }
+    })
+    res.status(201).json(admin)
+  } catch (error) {
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro ao criar administrador') })
+  }
+})
+
+// Cadastro normal de admin (protegido)
 router.post("/", verificaToken, async (req, res) => {
 
   const valida = adminSchema.safeParse(req.body)
   if (!valida.success) {
-    res.status(400).json({ erro: valida.error })
+    res.status(400).json({ erro: zodIssues(valida.error) })
     return
   }
 
@@ -108,7 +173,7 @@ router.post("/", verificaToken, async (req, res) => {
     })
     res.status(201).json(admin)
   } catch (error) {
-    res.status(400).json(error)
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro ao criar administrador') })
   }
 })
 
@@ -120,7 +185,7 @@ router.get("/:id", async (req, res) => {
     })
     res.status(200).json(admin)
   } catch (error) {
-    res.status(400).json(error)
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro ao buscar administrador') })
   }
 })
 
@@ -130,7 +195,7 @@ router.post('/register', async (req, res) => {
 
   const valida = adminSchema.safeParse({ nome, email, senha, nivel })
   if (!valida.success) {
-    res.status(400).json({ erro: valida.error })
+    res.status(400).json({ erro: zodIssues(valida.error) })
     return
   }
 
@@ -149,7 +214,7 @@ router.post('/register', async (req, res) => {
     })
     res.status(201).json({ id: admin.id, nome: admin.nome, email: admin.email, nivel: admin.nivel })
   } catch (error) {
-    res.status(400).json(error)
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro ao registrar administrador') })
   }
 })
 
