@@ -63,7 +63,7 @@ curl http://127.0.0.1:9222/json/version
 5. Rodar script de envio de teste:
 
 ```powershell
-node send_whatsapp_puppeteer.js 5553984267781 "Teste de envio automático - apresentação"
+node send_whatsapp_puppeteer.js [REDACTED] "Teste de envio automático - apresentação"  # número removido por privacidade
 ```
 
 6. Mostrar mensagem no WhatsApp (screenshot anexada abaixo).
@@ -82,10 +82,10 @@ Browser: Chrome/141.0.7390.123
 - Log de execução do script `send_whatsapp_puppeteer.js` (trecho):
 
 ```
-Phone: 5553984267781
+Phone: [REDACTED]
 Message: Teste de envio automático - apresentação
 browserWSEndpoint: ws://127.0.0.1:9222/devtools/browser/871db461-3a9e-4786-9fc9-d4dea9090eb1
-Navegando para: https://web.whatsapp.com/send?phone=5553984267781&text=Teste%20de%20envio%20autom%C3%A1tico%20-%20apresenta%C3%A7%C3%A3o
+Navegando para: https://web.whatsapp.com/send?phone=[REDACTED]&text=Teste%20de%20envio%20autom%C3%A1tico%20-%20apresenta%C3%A7%C3%A3o
 Campo editável detectado com seletor: div[contenteditable="true"][data-tab]
 Mensagem digitada e Enter pressionado (envio).
 Terminado com sucesso.

@@ -57,7 +57,7 @@ Conteúdo (copiar):
 
 Exemplo de payload (copiar):
 {
-  "toPhone": "53984267781",
+  "toPhone": "[REDACTED]",
   "body": "Sua proposta foi aceita!",
   "provider": "twilio"
 }

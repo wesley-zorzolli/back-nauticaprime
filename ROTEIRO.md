@@ -14,7 +14,7 @@ Slide 4 (45s)
 
 Slide 5 (demonstração, 60–90s)
 - Mostrar terminal com `npm run dev` (servidor rodando). Mostrar `curl http://127.0.0.1:9222/json/version` e o webSocketDebuggerUrl.
-- Rodar `node send_whatsapp_puppeteer.js 5553984267781 "Teste..."` e mostrar o log de sucesso.
+- Rodar `node send_whatsapp_puppeteer.js [REDACTED] "Teste..."` e mostrar o log de sucesso.  # número removido por privacidade
 - Mostrar screenshot do WhatsApp com a mensagem recebida.
 
 Slide 6 (30s)

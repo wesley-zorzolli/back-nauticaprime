@@ -19,7 +19,7 @@ async function getWebSocketDebuggerUrl() {
 
 (async () => {
   try {
-    const phone = process.argv[2] || '5553984267781';
+  const phone = process.argv[2] || '[REDACTED]';
     const message = process.argv[3] || 'Olá! Teste de envio via Nautica Prime (puppeteer).';
 
     console.log('Phone:', phone);
