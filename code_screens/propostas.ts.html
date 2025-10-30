@@ -1,4 +1,23 @@
-import { PrismaClient } from "@prisma/client"
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>propostas.ts</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" />
+  <style>
+    body{ background:#2b2b2b; color:#f8f8f2; font-family: 'Fira Code', monospace; padding:24px; }
+    pre { font-size:14px; line-height:1.4; padding:20px; border-radius:8px; overflow:auto; }
+    h1{ font-size:18px; color:#fff; margin-bottom:12px }
+    .meta{ color:#bfbfbf; font-size:13px; margin-bottom:8px }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+</head>
+<body>
+  <h1>propostas.ts</h1>
+  <div class="meta">path: C:\Users\wesle\OneDrive\Área de Trabalho\nautica_prime\back_nautica\routes\propostas.ts</div>
+  <pre class="language-javascript"><code>import { PrismaClient } from "@prisma/client"
 import { Router } from "express"
 import { z } from 'zod'
 import { getErrorMessage } from "../utils/errors"
@@ -25,7 +44,7 @@ const propostaSchema = z.object({
 })
 
 // Listar todas as propostas (apenas para admins)
-router.get("/", async (req, res) => {
+router.get("/", async (req, res) =&gt; {
   try {
     const propostas = await prisma.proposta.findMany({
       include: {
@@ -54,7 +73,7 @@ router.get("/", async (req, res) => {
 })
 
 // Listar propostas de um cliente específico
-router.get("/cliente/:clienteId", async (req, res) => {
+router.get("/cliente/:clienteId", async (req, res) =&gt; {
   try {
     const { clienteId } = req.params
 
@@ -80,12 +99,12 @@ router.get("/cliente/:clienteId", async (req, res) => {
 })
 
 // Criar nova proposta
-router.post("/", async (req, res) => {
+router.post("/", async (req, res) =&gt; {
   try {
     const validation = propostaSchema.safeParse(req.body)
     
     if (!validation.success) {
-      const issues = validation.error.issues.map(issue => issue.message)
+      const issues = validation.error.issues.map(issue =&gt; issue.message)
       return res.status(400).json({ erro: issues.join(', ') })
     }
 
@@ -155,7 +174,7 @@ router.post("/", async (req, res) => {
 })
 
 // Atualizar status da proposta (apenas para admins)
-router.patch("/:id/status", async (req, res) => {
+router.patch("/:id/status", async (req, res) =&gt; {
   try {
     const { id } = req.params
     const { status } = req.body
@@ -200,16 +219,16 @@ router.patch("/:id/status", async (req, res) => {
 })
 
 // Responder uma proposta (apenas para admins)
-router.put("/:id/responder", async (req, res) => {
+router.put("/:id/responder", async (req, res) =&gt; {
   try {
     const { id } = req.params
     const { resposta } = req.body
 
-    if (!resposta || typeof resposta !== 'string' || resposta.trim().length < 10) {
+    if (!resposta || typeof resposta !== 'string' || resposta.trim().length &lt; 10) {
       return res.status(400).json({ erro: "Resposta deve ter pelo menos 10 caracteres" })
     }
 
-    if (resposta.length > 1000) {
+    if (resposta.length &gt; 1000) {
       return res.status(400).json({ erro: "Resposta deve ter no máximo 1000 caracteres" })
     }
 
@@ -252,12 +271,12 @@ router.put("/:id/responder", async (req, res) => {
 })
 
 // Aceitar proposta e registrar venda (apenas para admins)
-router.put("/:id/aceitar", async (req, res) => {
+router.put("/:id/aceitar", async (req, res) =&gt; {
   try {
     const { id } = req.params
     const { valor_negociado, adminId } = req.body
 
-    if (!valor_negociado || valor_negociado <= 0) {
+    if (!valor_negociado || valor_negociado &lt;= 0) {
       return res.status(400).json({ erro: "Valor negociado deve ser maior que zero" })
     }
 
@@ -295,7 +314,7 @@ router.put("/:id/aceitar", async (req, res) => {
     }
 
     // Usar transação para garantir consistência
-    const resultado = await prisma.$transaction(async (tx) => {
+    const resultado = await prisma.$transaction(async (tx) =&gt; {
       // 1. Atualizar status da proposta para ACEITA
       const propostaAtualizada = await tx.proposta.update({
         where: { id: Number(id) },
@@ -346,22 +365,22 @@ router.put("/:id/aceitar", async (req, res) => {
 
     // Enviar e-mail de confirmação para o cliente (se Mailtrap estiver configurado)
     try {
-      if (process.env.MAILTRAP_USER && process.env.MAILTRAP_PASS) {
+      if (process.env.MAILTRAP_USER &amp;&amp; process.env.MAILTRAP_PASS) {
         await sendMail({
           to: resultado.venda.cliente.email,
           subject: 'Sua proposta foi aceita! - Náutica Prime',
           html: `
-            <h2>Olá, ${resultado.venda.cliente.nome}!</h2>
-            <p><strong>Boa notícia!</strong> Sua proposta foi aceita!</p>
-            <h3>Detalhes da venda:</h3>
-            <ul>
-              <li><strong>Embarcação:</strong> ${resultado.venda.embarcacao.marca.nome} ${resultado.venda.embarcacao.modelo} (${resultado.venda.embarcacao.ano})</li>
-              <li><strong>Descrição:</strong> ${resultado.venda.descricao}</li>
-              <li><strong>Valor negociado:</strong> R$ ${Number(resultado.venda.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</li>
-              <li><strong>Data:</strong> ${new Date(resultado.venda.data_venda).toLocaleDateString('pt-BR')}</li>
-            </ul>
-            <p>Em breve entraremos em contato para finalizar os detalhes da compra.</p>
-            <p>Obrigado por escolher a Náutica Prime!</p>
+            &lt;h2&gt;Olá, ${resultado.venda.cliente.nome}!&lt;/h2&gt;
+            &lt;p&gt;&lt;strong&gt;Boa notícia!&lt;/strong&gt; Sua proposta foi aceita!&lt;/p&gt;
+            &lt;h3&gt;Detalhes da venda:&lt;/h3&gt;
+            &lt;ul&gt;
+              &lt;li&gt;&lt;strong&gt;Embarcação:&lt;/strong&gt; ${resultado.venda.embarcacao.marca.nome} ${resultado.venda.embarcacao.modelo} (${resultado.venda.embarcacao.ano})&lt;/li&gt;
+              &lt;li&gt;&lt;strong&gt;Descrição:&lt;/strong&gt; ${resultado.venda.descricao}&lt;/li&gt;
+              &lt;li&gt;&lt;strong&gt;Valor negociado:&lt;/strong&gt; R$ ${Number(resultado.venda.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}&lt;/li&gt;
+              &lt;li&gt;&lt;strong&gt;Data:&lt;/strong&gt; ${new Date(resultado.venda.data_venda).toLocaleDateString('pt-BR')}&lt;/li&gt;
+            &lt;/ul&gt;
+            &lt;p&gt;Em breve entraremos em contato para finalizar os detalhes da compra.&lt;/p&gt;
+            &lt;p&gt;Obrigado por escolher a Náutica Prime!&lt;/p&gt;
           `
         })
       }
@@ -389,7 +408,7 @@ router.put("/:id/aceitar", async (req, res) => {
               console.warn('Falha ao enviar via Puppeteer, tentando Twilio fallback:', (ppErr as any)?.message || ppErr)
               // Terceiro: Se Twilio estiver configurado, tente enviar por lá
               try {
-                if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_FROM) {
+                if (process.env.TWILIO_ACCOUNT_SID &amp;&amp; process.env.TWILIO_AUTH_TOKEN &amp;&amp; process.env.TWILIO_WHATSAPP_FROM) {
                   await sendWhatsAppTwilio(clienteTelefone, mensagem)
                   console.log('Mensagem WhatsApp enviada via Twilio para', clienteTelefone)
                 } else {
@@ -418,7 +437,7 @@ router.put("/:id/aceitar", async (req, res) => {
 })
 
 // Deletar proposta
-router.delete("/:id", async (req, res) => {
+router.delete("/:id", async (req, res) =&gt; {
   try {
     const { id } = req.params
 
@@ -440,4 +459,6 @@ router.delete("/:id", async (req, res) => {
   }
 })
 
-export default router
+export default router</code></pre>
+</body>
+</html>

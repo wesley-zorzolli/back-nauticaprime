@@ -1,3 +1,16 @@
 node_modules
 # Keep environment variables out of version control
 .env
+# Presentation / artifacts
+*.zip
+*.pptx
+venom-qr.png
+.env
+.venom_profile/
+tokens/
+node_modules/
+dist/
+build/
+presentation_screens/*.png
+presentation_screens/*_backup*
+presentation_screens/*.bak

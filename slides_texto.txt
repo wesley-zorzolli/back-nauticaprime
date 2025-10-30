@@ -1,0 +1,47 @@
+Slide 1 - Título
+Automação de WhatsApp — Envio automático ao aceitar proposta
+
+Slide 2 - Objetivo
+Quando um administrador aceita uma proposta no sistema, uma mensagem WhatsApp (com detalhes da venda) é enviada automaticamente ao cliente para confirmação e próximos passos.
+
+Slide 3 - Tecnologias
+- Backend: Node.js + TypeScript + Express
+- Banco: Prisma (Neon/Postgres)
+- Integração WhatsApp: Venom-bot (preferido) / Puppeteer connect (fallback) / Twilio (backup pago)
+
+Slide 4 - Fluxo resumido
+1) Admin aceita proposta na interface
+2) Backend cria Venda e chama serviço WhatsApp
+3) Serviço envia mensagem via WhatsApp Web (ou Twilio)
+4) Cliente recebe mensagem com detalhes e contato do vendedor
+
+Slide 5 - Implemetação (endereços importantes)
+- Endpoint: PUT /propostas/:id/aceitar  (arquivo: routes/propostas.ts)
+- Serviços: services/whatsappVenom.ts, services/whatsappPuppeteer.ts, services/whatsappTwilio.ts
+- Script de teste: send_whatsapp_puppeteer.js
+
+Slide 6 - Problema encontrado e solução
+Problema: `venom-bot` apresentou erro de compatibilidade com o Chrome local (launcher/flags incompatíveis).
+Solução aplicada para demonstração: usar `puppeteer.connect` para automatizar um Chrome aberto com `--remote-debugging-port=9222`.
+
+Slide 7 - Passo-a-passo para a demo (comandos prontos)
+1) Abrir Chrome com debug:
+& "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\\temp\\chrome-debug" --window-size=1600,1200
+2) No projeto backend:
+cd back_nautica
+npm run dev
+3) Teste de envio:
+node send_whatsapp_puppeteer.js 5553984267781 "Olá! Esta é uma mensagem de teste enviada automaticamente ao aceitar a proposta."
+
+Slide 8 - Evidência (o que anexar)
+- Screenshot do chat (arquivo: whatsapp_5553984267781_highres.png)
+- Trecho do webSocketDebuggerUrl e versão do Chrome
+- Logs curtos do envio (console)
+
+Slide 9 - Conclusão e próximos passos
+- O envio automático funciona (fallback via Puppeteer). Próximos passos:
+  - Alinhar/pinçar versões do venom-bot/@puppeteer/browsers para usar Venom nativo
+  - Persistir sessão (user-data-dir) para evitar QR
+  - Avaliar Twilio para produção (confiabilidade e SLAs)
+
+FIM

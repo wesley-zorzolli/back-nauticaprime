@@ -1,0 +1,52 @@
+{
+    "id":  12,
+    "clienteId":  "6a0fa60a-270a-4351-be91-5de417967b06",
+    "embarcacaoId":  4,
+    "descricao":  "Venda gerada a partir da proposta: Proposta automática de teste",
+    "valor":  "1000",
+    "data_venda":  "2025-10-30T17:23:19.549Z",
+    "whatsappSid":  null,
+    "whatsappStatus":  null,
+    "createdAt":  "2025-10-30T17:23:19.560Z",
+    "updatedAt":  "2025-10-30T17:23:19.560Z",
+    "adminId":  "6619b868-77d7-4682-8753-c97af7ffda07",
+    "cliente":  {
+                    "id":  "6a0fa60a-270a-4351-be91-5de417967b06",
+                    "nome":  "solisnande",
+                    "email":  "[REDACTED]",
+                    "senha":  "[REDACTED]",
+                    "cidade":  "pelotas",
+                    "telefone":  "[REDACTED]",
+                    "createdAt":  "2025-10-25T13:52:26.816Z",
+                    "updatedAt":  "2025-10-25T13:52:26.816Z"
+                },
+    "embarcacao":  {
+                       "id":  4,
+                       "modelo":  "Lancha Mestra 180 Plus",
+                       "ano":  2013,
+                       "motor":  "GASOLINA",
+                       "km_horas":  "180",
+                       "acessorios":  "Som com alto-falantes náuticos JBL\nPorta caniços articulados\nToldo\nFechamento total",
+                       "foto":  "https://vidanauticaoffroad.com.br/wp-content/uploads/2024/11/WhatsApp-Image-2024-11-07-at-19.32.19.jpeg",
+                       "vendida":  true,
+                       "createdAt":  "2025-10-15T19:02:14.101Z",
+                       "updatedAt":  "2025-10-30T17:23:21.524Z",
+                       "marcaId":  4,
+                       "adminId":  null,
+                       "preco":  "116900",
+                       "marca":  {
+                                     "id":  4,
+                                     "nome":  "MESTRA"
+                                 }
+                   },
+    "admin":  {
+                  "id":  "6619b868-77d7-4682-8753-c97af7ffda07",
+                  "nome":  "wesley solisnande",
+                  "email":  "[REDACTED]",
+                  "senha":  "[REDACTED]",
+                  "nivel":  5,
+                  "createdAt":  "2025-10-15T19:30:46.119Z",
+                  "updatedAt":  "2025-10-15T19:30:46.119Z"
+              }
+}
+

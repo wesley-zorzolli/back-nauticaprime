@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>whatsappTwilio.ts</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" />
+  <style>
+    body{ background:#2b2b2b; color:#f8f8f2; font-family: 'Fira Code', monospace; padding:24px; }
+    pre { font-size:14px; line-height:1.4; padding:20px; border-radius:8px; overflow:auto; }
+    h1{ font-size:18px; color:#fff; margin-bottom:12px }
+    .meta{ color:#bfbfbf; font-size:13px; margin-bottom:8px }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+</head>
+<body>
+  <h1>whatsappTwilio.ts</h1>
+  <div class="meta">path: C:\Users\wesle\OneDrive\Área de Trabalho\nautica_prime\back_nautica\services\whatsappTwilio.ts</div>
+  <pre class="language-javascript"><code>import Twilio from 'twilio'
+
+const accountSid = process.env.TWILIO_ACCOUNT_SID
+const authToken = process.env.TWILIO_AUTH_TOKEN
+const fromWhats = process.env.TWILIO_WHATSAPP_FROM // ex: 'whatsapp:+14155238886'
+
+let client: Twilio.Twilio | null = null
+if (accountSid &amp;&amp; authToken) {
+  client = Twilio(accountSid, authToken)
+}
+
+export async function sendWhatsAppTwilio(toPhone: string, body: string) {
+  if (!client) throw new Error('Twilio client não configurado (TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN ausentes)')
+  if (!fromWhats) throw new Error('TWILIO_WHATSAPP_FROM não configurado')
+
+  // Normalizar número para E.164 sem sinais e com DDI 55 se não informado
+  const digits = toPhone.replace(/\D/g, '')
+  const withDDI = digits.startsWith('55') ? digits : `55${digits}`
+  const to = `whatsapp:+${withDDI}`
+
+  const msg = await client.messages.create({
+    from: fromWhats,
+    to,
+    body
+  })
+
+  return msg
+}
+
+export default sendWhatsAppTwilio
+</code></pre>
+</body>
+</html>

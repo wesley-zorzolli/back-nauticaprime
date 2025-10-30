@@ -1,0 +1,20 @@
+Resumo das dificuldades encontradas na integração com WhatsApp
+
+- Venom-bot incompatibilidade com Chrome local:
+  * Erro observado: "Old Headless mode has been removed" causado por flags/launcher incompatíveis entre a versão do Chromium usada pelo venom e o Chrome instalado localmente.
+  * Consequência: Venom não inicou corretamente em ambientes com Chrome mais novo/launcher diferente.
+
+- Fallback implementado (Puppeteer connect):
+  * Conectar a um Chrome já aberto com --remote-debugging-port evita que o launcher precise iniciar um navegador compatível.
+  * Requisito: o usuário deve abrir o Chrome com remote-debugging antes de enviar mensagens no servidor.
+
+- Twilio como último recurso (pago):
+  * Se Venom e Puppeteer falharem, o código tenta enviar via Twilio (requere credenciais). Útil em produção por confiabilidade/SLAs.
+
+- Problemas na geração de GIFs/imagens com dependências nativas:
+  * Algumas bibliotecas (canvas, gifencoder) exigem compilação nativa no Windows (Visual Studio C++ build tools). Isso bloqueou tentativa automática de gerar GIFs aqui.
+
+- Boas práticas / recomendações:
+  * Persistir sessão do browser usando user-data-dir para evitar QR repetido.
+  * Padronizar formatação de telefone ao salvar (preferencialmente com DDI, ex: 5511999998888).
+  * Em ambiente de demonstração, documentar o comando para abrir Chrome com remote-debugging e deixar instruções claras para usuário/avaliador.

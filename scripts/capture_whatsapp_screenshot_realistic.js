@@ -1,0 +1,220 @@
+const puppeteer = require('puppeteer-core');
+
+function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+(async ()=>{
+  const argv = process.argv.slice(2);
+  const phone = argv[0];
+  const outTyping = argv[1] || `whatsapp_${phone}_typing.png`;
+  const outSent = argv[2] || `whatsapp_${phone}_sent.png`;
+  const width = parseInt(argv[3] || '1920', 10);
+  const height = parseInt(argv[4] || '1200', 10);
+  const scale = parseFloat(argv[5] || '2');
+  const message = argv[6] || 'Olá! Confirmação automática: sua proposta foi aceita. Em breve entraremos em contato para os próximos passos.';
+
+  if(!phone){
+    console.error('Usage: node capture_whatsapp_screenshot_realistic.js <phone> [outTyping.png] [outSent.png] [width] [height] [scale] [message]');
+    process.exit(1);
+  }
+
+  try{
+    const http = require('http');
+    const wsRes = await new Promise((resolve, reject) => {
+      http.get('http://127.0.0.1:9222/json/version', (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try { resolve(JSON.parse(data)); } catch(e){ reject(e); }
+        });
+      }).on('error', reject);
+    });
+    const ws = wsRes.webSocketDebuggerUrl;
+    console.log('Connecting to', ws);
+    const browser = await puppeteer.connect({browserWSEndpoint: ws});
+    const page = await browser.newPage();
+    await page.setViewport({width, height, deviceScaleFactor: scale});
+
+    const url = `https://web.whatsapp.com/send?phone=${phone}`;
+    console.log('Navigating to:', url);
+    await page.goto(url, {waitUntil: 'networkidle2', timeout: 120000});
+    await page.waitForSelector('div[contenteditable="true"][data-tab]', {timeout: 120000});
+
+    // Ensure panel is present
+    const panelSelectors = ['div[data-testid="conversation-panel"]', '#main', 'div.copyable-area', 'div[role="region"]'];
+    let panelHandle = null;
+    for (const sel of panelSelectors) {
+      try {
+        const handle = await page.$(sel);
+        if (handle) {
+          const box = await handle.boundingBox();
+          if (box && box.height > 80 && box.width > 80) {
+            panelHandle = handle;
+            break;
+          }
+        }
+      } catch(e){}
+    }
+
+    // Focus input and clear
+    const inputSelector = 'div[contenteditable="true"][data-tab]';
+    await page.focus(inputSelector);
+    // Clear any content
+    await page.evaluate((sel)=>{
+      const el = document.querySelector(sel);
+      if(el){
+        // remove all child nodes
+        while(el.firstChild) el.removeChild(el.firstChild);
+      }
+    }, inputSelector);
+
+    // Simulate human typing with variable delays; type in two phases to create a "typing" screenshot mid-phrase
+    const words = message.split(' ');
+    const splitIndex = Math.max(1, Math.floor(words.length * 0.6));
+    const firstPart = words.slice(0, splitIndex).join(' ') + ' ';
+    const secondPart = words.slice(splitIndex).join(' ');
+
+    // Type first part slowly
+    for (const ch of firstPart) {
+      await page.type(inputSelector, ch, {delay: randInt(60, 150)});
+    }
+
+    // small pause to mimic thinking
+    await page.waitForTimeout(randInt(700, 1400));
+
+    // Inject a fake "digitando..." typing indicator into the chat panel to create a realistic demo effect
+    // Prefer the handle we found earlier (panelHandle) to avoid selecting the wrong element (e.g., the top search input).
+    const typingOverlayAdded = await page.evaluate((panel) => {
+      try {
+        const target = panel || document.querySelector('div[data-testid="conversation-panel"]') || document.querySelector('#main') || document.querySelector('.copyable-area') || document.body;
+        if (!target) return false;
+        // create container
+        const cont = document.createElement('div');
+        cont.id = '__fake_typing_overlay__';
+        cont.style.position = 'absolute';
+        cont.style.right = '24px';
+        cont.style.bottom = '110px';
+        cont.style.zIndex = '99999';
+        cont.style.pointerEvents = 'none';
+        cont.style.display = 'flex';
+        cont.style.alignItems = 'center';
+
+        // bubble
+        const bubble = document.createElement('div');
+        bubble.style.background = 'rgba(255,255,255,0.95)';
+        bubble.style.borderRadius = '18px';
+        bubble.style.padding = '8px 12px';
+        bubble.style.boxShadow = '0 1px 4px rgba(0,0,0,0.2)';
+        bubble.style.display = 'flex';
+        bubble.style.gap = '6px';
+
+        // three dots
+        for (let i=0;i<3;i++){
+          const dot = document.createElement('span');
+          dot.style.width = '6px';
+          dot.style.height = '6px';
+          dot.style.background = '#6b6b6b';
+          dot.style.borderRadius = '50%';
+          dot.style.display = 'inline-block';
+          dot.style.opacity = '0.6';
+          dot.style.transform = 'translateY(0)';
+          dot.style.animation = `__fake_dot_bounce__ 900ms ${i*120}ms infinite ease-in-out`;
+          bubble.appendChild(dot);
+        }
+
+        // keyframes
+        const style = document.createElement('style');
+        style.id = '__fake_typing_style__';
+        style.textContent = `@keyframes __fake_dot_bounce__ { 0%{ transform: translateY(0); opacity: 0.4 } 50%{ transform: translateY(-6px); opacity: 1 } 100%{ transform: translateY(0); opacity: 0.4 } }`;
+
+        cont.appendChild(bubble);
+        // position container relative to the target panel
+        if (getComputedStyle(target).position === 'static') target.style.position = 'relative';
+        target.appendChild(style);
+        target.appendChild(cont);
+        return true;
+      } catch(e){ return false; }
+    }, panelHandle);
+
+    // Take typing screenshot (with overlay present)
+    if(panelHandle){
+      console.log('Taking typing screenshot to', outTyping, '(overlay injected)');
+      await panelHandle.screenshot({path: outTyping, omitBackground:false});
+    } else {
+      console.log('Panel not found; falling back to full page typing screenshot to', outTyping);
+      await page.screenshot({path: outTyping, fullPage:true});
+    }
+
+    // Remove overlay before continuing
+    await page.evaluate(()=>{
+      try{ const el = document.getElementById('__fake_typing_overlay__'); if(el) el.remove(); const s = document.getElementById('__fake_typing_style__'); if(s) s.remove(); }catch(e){}
+    });
+
+    // Continue typing remaining text
+    for (const ch of secondPart) {
+      await page.type(inputSelector, ch, {delay: randInt(60, 150)});
+    }
+
+    // Slight pause before sending
+    await page.waitForTimeout(randInt(300, 800));
+    // Press Enter to send
+    await page.keyboard.press('Enter');
+
+    // Wait for the message to appear in the chat area (tolerant): try to detect the text, otherwise fallback to a fixed wait
+    try {
+      const safeText = message.slice(0, 80).replace(/[^\w\s\-.,:;!\?]/g, '');
+      await page.waitForFunction((txt)=>{
+        const messages = Array.from(document.querySelectorAll('div.copyable-area div.message-in, div.copyable-area div.message-out, div.message'));
+        return messages.some(m => m.innerText && m.innerText.includes(txt));
+      }, {timeout: 20000}, safeText);
+    } catch (e) {
+      console.warn('Timed out waiting for message detection; falling back to short fixed wait before taking final screenshot.');
+      await page.waitForTimeout(3000);
+    }
+    // Take sent screenshot — re-query the panel handle in case the DOM changed during send
+    let panelHandleFinal = panelHandle;
+    try {
+      if (panelHandleFinal) {
+        const boxChk = await panelHandleFinal.boundingBox();
+        if (!boxChk) panelHandleFinal = null;
+      }
+    } catch (e) {
+      panelHandleFinal = null;
+    }
+
+    if (!panelHandleFinal) {
+      for (const sel of panelSelectors) {
+        try {
+          const h = await page.$(sel);
+          if (h) {
+            const b = await h.boundingBox();
+            if (b && b.width > 80 && b.height > 80) {
+              panelHandleFinal = h;
+              break;
+            } else {
+              try { await h.dispose(); } catch(e){}
+            }
+          }
+        } catch (e){}
+      }
+    }
+
+    if (panelHandleFinal) {
+      console.log('Taking sent screenshot to', outSent);
+      await panelHandleFinal.screenshot({path: outSent, omitBackground:false});
+      if (panelHandleFinal !== panelHandle) {
+        try { await panelHandleFinal.dispose(); } catch(e){}
+      }
+    } else {
+      console.log('Panel not found; falling back to full page sent screenshot to', outSent);
+      await page.screenshot({path: outSent, fullPage:true});
+    }
+
+    console.log('Screenshots saved:', outTyping, outSent);
+    await page.close();
+    await browser.disconnect();
+    process.exit(0);
+  }catch(err){
+    console.error(err);
+    process.exit(1);
+  }
+})();
