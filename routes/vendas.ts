@@ -33,6 +33,24 @@ router.get("/", async (req, res) => {
   }
 })
 
+// Buscar venda por id (inclui status do WhatsApp)
+router.get('/id/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    const venda = await prisma.venda.findUnique({
+      where: { id: Number(id) },
+      include: {
+        cliente: true,
+        embarcacao: { include: { marca: true } }
+      }
+    })
+    if (!venda) return res.status(404).json({ erro: 'Venda não encontrada' })
+    return res.status(200).json(venda)
+  } catch (error) {
+    return res.status(400).json(error)
+  }
+})
+
 router.post("/", async (req, res) => {
 
   const valida = vendaSchema.safeParse(req.body)

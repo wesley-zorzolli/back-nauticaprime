@@ -44,6 +44,7 @@ model Cliente {
   email     String     @db.VarChar(40)
   senha     String     @db.VarChar(60)
   cidade    String     @db.VarChar(30)
+  telefone  String?    @db.VarChar(20)
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   vendas    Venda[]
@@ -59,6 +60,8 @@ model Venda {
   descricao    String     @db.VarChar(255)
   valor        Decimal    @db.Decimal(10, 2)
   data_venda   DateTime
+  whatsappSid  String?    @db.VarChar(64)
+  whatsappStatus String?  @db.VarChar(30)
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
   adminId      String?    @db.VarChar(36)
