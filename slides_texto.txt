@@ -30,11 +30,12 @@ Slide 7 - Passo-a-passo para a demo (comandos prontos)
 2) No projeto backend:
 cd back_nautica
 npm run dev
-3) Teste de envio:
-node send_whatsapp_puppeteer.js 5553984267781 "Olá! Esta é uma mensagem de teste enviada automaticamente ao aceitar a proposta."
+3) Teste de envio (exemplo sanitizado):
+# NOTE: dados pessoais removidos intencionalmente. Substitua [REDACTED] por um número de teste local quando necessário.
+node send_whatsapp_puppeteer.js [REDACTED_DDI_DDD_NUM] "Olá! Esta é uma mensagem de teste enviada automaticamente ao aceitar a proposta."
 
 Slide 8 - Evidência (o que anexar)
-- Screenshot do chat (arquivo: whatsapp_5553984267781_highres.png)
+- Screenshot do chat (arquivo: whatsapp_[REDACTED]_highres.png)  # imagem com número removido do repositório por privacidade
 - Trecho do webSocketDebuggerUrl e versão do Chrome
 - Logs curtos do envio (console)
 
