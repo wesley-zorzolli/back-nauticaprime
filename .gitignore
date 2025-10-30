@@ -14,3 +14,4 @@ build/
 presentation_screens/*.png
 presentation_screens/*_backup*
 presentation_screens/*.bak
+chrome-headless-shell/
