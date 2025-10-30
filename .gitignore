@@ -15,3 +15,6 @@ presentation_screens/*.png
 presentation_screens/*_backup*
 presentation_screens/*.bak
 chrome-headless-shell/
+# Allow presentation release artifacts (explicit exception for this folder)
+!/presentation_release/
+!/presentation_release/*
