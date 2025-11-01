@@ -13,7 +13,8 @@ const clienteSchema = z.object({
   }),
   email: z.string().email({message: "Informe um e-mail válido"}),
   senha: z.string(),
-  cidade: z.string()
+  cidade: z.string(),
+  telefone: z.string().optional()
 })
 
 router.get("/", async (req, res) => {
@@ -98,12 +99,12 @@ router.post("/", async (req, res) => {
   // gera o hash da senha acrescida do salt
   const hash = bcrypt.hashSync(valida.data.senha, salt)
 
-  const { nome, email, cidade } = valida.data
+  const { nome, email, cidade, telefone } = valida.data
 
   // para o campo senha, atribui o hash gerado
   try {
     const cliente = await prisma.cliente.create({
-      data: { nome, email, senha: hash, cidade }
+      data: { nome, email, senha: hash, cidade, telefone }
     })
     res.status(201).json(cliente)
   } catch (error) {
@@ -120,6 +121,26 @@ router.get("/:id", async (req, res) => {
     res.status(200).json(cliente)
   } catch (error) {
     res.status(400).json({ erro: getErrorMessage(error, 'Erro ao buscar cliente') })
+  }
+})
+
+// Atualizar cliente (ex.: telefone)
+router.put("/:id", async (req, res) => {
+  const { id } = req.params
+  const body = req.body
+  try {
+    const cliente = await prisma.cliente.update({
+      where: { id },
+      data: {
+        nome: body.nome,
+        email: body.email,
+        cidade: body.cidade,
+        telefone: body.telefone
+      }
+    })
+    res.status(200).json(cliente)
+  } catch (error) {
+    res.status(400).json({ erro: getErrorMessage(error, 'Erro ao atualizar cliente') })
   }
 })
 

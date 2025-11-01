@@ -1,0 +1,14 @@
+For+ºando embarca+º+úo como n+úo vendida para teste: 4
+Proposta criada: 12
+Transa+º+úo conclu+¡da. Venda id: 12
+Enviando WhatsApp para [REDACTED_PHONE]
+Phone: [REDACTED_PHONE]
+Message: Ol+í solisnande, sua proposta foi aceita! Valor negociado: R$ 1.000,00. Em breve entraremos em contato para os pr+¦ximos passos.
+browserWSEndpoint: ws://127.0.0.1:9222/devtools/browser/1d1e509e-2c79-4103-a3a0-4f751002c4fa
+Navegando para: https://web.whatsapp.com/send?phone=[REDACTED_PHONE]&text=Ol%C3%A1%20solisnande%2C%20sua%20proposta%20foi%20aceita!%20Valor%20negociado%3A%20R%24%201.000%2C00.%20Em%20breve%20entraremos%20em%20contato%20para%20os%20pr%C3%B3ximos%20passos.
+Campo edit+ível detectado com seletor: div[contenteditable="true"][data-tab]
+Mensagem digitada e Enter pressionado (envio).
+Screenshot do painel salvo em ./whatsapp_[REDACTED_PHONE]_after_send.png
+Terminado com sucesso.
+Mensagem enviada via Puppeteer (script externo) com sucesso
+
