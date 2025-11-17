@@ -16,7 +16,7 @@ import routesPropostas from './routes/propostas'
 import routesCriarCliente from './routes/criarCliente'
 
 const app = express()
-const port = 3000
+const port = Number(process.env.PORT) || 3000
 
 app.use(express.json())
 app.use(cors())
@@ -35,6 +35,8 @@ app.use("/vendas", routesVendas)
 app.use("/dashboard", routesDashboard)
 app.use("/admins/login", routesAdminLogin)
 app.use("/admins", routesAdmins)
+app.use("/propostas", routesPropostas)
+app.use("/teste", routesCriarCliente)
 app.use("/propostas", routesPropostas)
 app.use("/teste", routesCriarCliente)
 

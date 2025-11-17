@@ -3,6 +3,8 @@ import { Router } from "express"
 import { z } from 'zod'
 import { getErrorMessage } from "../utils/errors"
 import { sendMail } from '../services/mailer'
+import { sendWhatsapp } from '../services/whatsapp'
+import { sendWhatsappVenom } from '../services/whatsappVenom'
 
 const prisma = new PrismaClient()
 const router = Router()
@@ -365,6 +367,55 @@ router.put("/:id/aceitar", async (req, res) => {
     } catch (emailError) {
       console.error('Erro ao enviar e-mail:', emailError)
       // Não interrompe o fluxo se o e-mail falhar
+    }
+
+    // Enviar mensagem via WhatsApp — tenta Twilio primeiro (se configurado), senão faz fallback para Venom (WhatsApp Web)
+    try {
+      const telefone = (resultado.venda.cliente as any)?.telefone
+      if (!telefone) {
+        console.log('Cliente sem telefone cadastrado — pulando envio WhatsApp')
+      } else {
+        const texto = `Olá ${resultado.venda.cliente.nome}, sua proposta foi aceita! Embarcação: ${resultado.venda.embarcacao.marca.nome} ${resultado.venda.embarcacao.modelo} (${resultado.venda.embarcacao.ano}). Valor: R$ ${Number(resultado.venda.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}. Data: ${new Date(resultado.venda.data_venda).toLocaleDateString('pt-BR')}`
+
+        // Prefer Twilio se configurado
+        if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_WHATSAPP_FROM) {
+          try {
+            // se tivermos BASE_URL configurada, informe statusCallback para receber updates
+            const statusCallback = process.env.BASE_URL ? `${process.env.BASE_URL.replace(/\/$/, '')}/webhooks/twilio/messages` : undefined
+            const resp = await sendWhatsapp(telefone, texto, { statusCallback })
+            console.log('WhatsApp enviado via Twilio para', telefone, 'sid=', resp?.sid)
+            // persiste SID/status na venda (se disponível)
+            try {
+              if (resp && resp.sid && resultado?.venda?.id) {
+                await prisma.venda.update({
+                  where: { id: resultado.venda.id },
+                  data: { whatsappSid: resp.sid, whatsappStatus: resp.status }
+                })
+              }
+            } catch (persistErr) {
+              console.error('Erro ao persistir whatsapp SID na venda:', persistErr)
+            }
+          } catch (twError) {
+            console.error('Erro Twilio, tentando Venom como fallback:', twError)
+            try {
+              await sendWhatsappVenom(telefone, texto)
+              console.log('WhatsApp enviado via Venom (fallback) para', telefone)
+            } catch (venomErr) {
+              console.error('Falha ao enviar via Venom também:', venomErr)
+            }
+          }
+        } else {
+          // Se Twilio não configurado, tenta Venom automaticamente
+          try {
+            await sendWhatsappVenom(telefone, texto)
+            console.log('WhatsApp enviado via Venom para', telefone)
+          } catch (venomErr) {
+            console.error('Erro ao enviar WhatsApp via Venom:', venomErr)
+          }
+        }
+      }
+    } catch (waError) {
+      console.error('Erro ao processar envio WhatsApp:', waError)
     }
 
     return res.status(200).json({
